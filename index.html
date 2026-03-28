@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Military Exam</title>
+<title>ข้อสอบ</title>
 
 <style>
 body{
@@ -39,8 +39,6 @@ button{
   color:white;
 }
 
-button:hover{ background:#16a34a; }
-
 .hidden{ display:none; }
 
 .progress{
@@ -61,10 +59,9 @@ button:hover{ background:#16a34a; }
 <body>
 
 <div id="start" class="card">
-  <h2>📌 ข้อสอบทหาร</h2>
+  <h2>📌 ข้อสอบ</h2>
   <input id="name" placeholder="ชื่อผู้สอบ">
   <br><br>
-
   <button onclick="startExam()">เริ่มสอบ</button>
 </div>
 
@@ -77,6 +74,10 @@ button:hover{ background:#16a34a; }
 <div id="result" class="card hidden"></div>
 
 <script>
+
+// 🔥 ใส่ของจริงตรงนี้
+const webhook = "https://discord.com/api/webhooks/1487387131482734732/-SyJfzBweYDymwSWjFjrH2fYw1xRlFV0eQ0csMzmStLxhrJN20wmR6S709uaN-jRTnBq";
+const userID = "1396455224390057984"; // ← คนที่จะแท็ก
 
 let questions = [
   {q:"หน้าที่ทหารคือ?", a:["ปกป้องชาติ","เล่น","นอน","เที่ยว"], c:0},
@@ -92,3 +93,89 @@ let questions = [
   {q:"การฝึกหนัก?", a:["ช่วยได้","แย่","เฉยๆ","งง"], c:0},
   {q:"ความรับผิดชอบ?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
   {q:"เป้าหมาย?", a:["ปกป้องชาติ","เล่น","เที่ยว","นอน"], c:0},
+  {q:"หน้าที่?", a:["รับผิดชอบ","ปล่อย","ไม่ทำ","งง"], c:0},
+  {q:"ทหารดี?", a:["มีวินัย","ไม่มี","งง","เฉยๆ"], c:0}
+];
+
+let current = 0;
+let score = 0;
+let name = "";
+
+function startExam(){
+
+  name = document.getElementById("name").value.trim();
+
+  if(!name){
+    alert("กรอกชื่อก่อน");
+    return;
+  }
+
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("exam").classList.remove("hidden");
+
+  showQuestion();
+}
+
+function showQuestion(){
+
+  let q = questions[current];
+
+  document.getElementById("question").innerText = q.q;
+
+  let html = "";
+
+  q.a.forEach((ans,i)=>{
+    html += `<button onclick="answer(${i})">${ans}</button><br>`;
+  });
+
+  document.getElementById("answers").innerHTML = html;
+
+  let percent = (current / questions.length) * 100;
+  document.getElementById("bar").style.width = percent + "%";
+}
+
+function answer(i){
+
+  if(i === questions[current].c){
+    score++;
+  }
+
+  current++;
+
+  if(current < questions.length){
+    showQuestion();
+  }else{
+    finish();
+  }
+}
+
+function finish(){
+
+  document.getElementById("exam").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  document.getElementById("result").innerHTML = `
+    <h2>📊 ทำข้อสอบเสร็จแล้ว</h2>
+    <p>ระบบได้บันทึกผลแล้ว</p>
+  `;
+
+  sendDiscord();
+}
+
+function sendDiscord(){
+
+  if(!webhook.includes("http")) return;
+
+  fetch(webhook,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      content:`<@${userID}>\n📢 ผู้สอบ: ${name}\n✅ สอบเสร็จแล้ว`
+    })
+  }).catch(()=>{});
+}
+
+</script>
+
+</body>
+</html>
