@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Military Exam</title>
+
+<style>
+body{
+  font-family:sans-serif;
+  background:#0b1220;
+  color:white;
+  text-align:center;
+  padding:20px;
+}
+
+.card{
+  background:#111827;
+  padding:20px;
+  border-radius:14px;
+  max-width:520px;
+  margin:auto;
+}
+
+input{
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  width:80%;
+}
+
+button{
+  padding:10px 16px;
+  margin:6px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:#22c55e;
+  color:white;
+}
+
+button:hover{ background:#16a34a; }
+
+.hidden{ display:none; }
+
+.progress{
+  height:10px;
+  background:#374151;
+  border-radius:10px;
+  margin:10px 0;
+}
+
+.bar{
+  height:100%;
+  width:0%;
+  background:#22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start" class="card">
+  <h2>📌 ข้อสอบทหาร</h2>
+  <input id="name" placeholder="ชื่อผู้สอบ">
+  <br><br>
+
+  <button onclick="startExam()">เริ่มสอบ</button>
+</div>
+
+<div id="exam" class="card hidden">
+  <div class="progress"><div id="bar" class="bar"></div></div>
+  <h3 id="question"></h3>
+  <div id="answers"></div>
+</div>
+
+<div id="result" class="card hidden"></div>
+
+<script>
+
+let questions = [
+  {q:"หน้าที่ทหารคือ?", a:["ปกป้องชาติ","เล่น","นอน","เที่ยว"], c:0},
+  {q:"วินัยคือ?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
+  {q:"คำสั่ง?", a:["ต้องทำ","ไม่ต้อง","งง","เฉยๆ"], c:0},
+  {q:"ความสามัคคี?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
+  {q:"การฝึก?", a:["ช่วยพัฒนา","แย่","งง","เฉยๆ"], c:0},
+  {q:"ความอดทน?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
+  {q:"หน้าที่หลัก?", a:["ปกป้องชาติ","เล่น","นอน","กิน"], c:0},
+  {q:"ทหารต้องมี?", a:["วินัย","ขี้เกียจ","โกหก","เฉยๆ"], c:0},
+  {q:"ความกล้า?", a:["จำเป็น","ไม่จำเป็น","งง","เฉยๆ"], c:0},
+  {q:"คำสั่งผู้บังคับ?", a:["ต้องทำ","ไม่ต้อง","เฉยๆ","งง"], c:0},
+  {q:"การฝึกหนัก?", a:["ช่วยได้","แย่","เฉยๆ","งง"], c:0},
+  {q:"ความรับผิดชอบ?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
+  {q:"เป้าหมาย?", a:["ปกป้องชาติ","เล่น","เที่ยว","นอน"], c:0},
