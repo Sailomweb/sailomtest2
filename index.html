@@ -3,163 +3,254 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ข้อสอบ</title>
+<title>Sailom City สมัครงาน</title>
 
 <style>
 body{
   font-family:sans-serif;
-  background:#0b1220;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
   color:white;
-  text-align:center;
+  margin:0;
   padding:20px;
 }
-
-.card{
-  background:#111827;
-  padding:20px;
-  border-radius:14px;
+.container{
   max-width:520px;
   margin:auto;
+  background:#111827;
+  padding:20px;
+  border-radius:15px;
 }
-
-input{
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  width:80%;
-}
-
 button{
-  padding:10px 16px;
-  margin:6px;
+  width:100%;
+  padding:12px;
+  margin-top:10px;
   border:none;
-  border-radius:8px;
-  cursor:pointer;
-  background:#22c55e;
+  border-radius:10px;
+  background:#f97316;
   color:white;
 }
-
-.hidden{ display:none; }
-
-.progress{
-  height:10px;
-  background:#374151;
+input,textarea,select{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
   border-radius:10px;
-  margin:10px 0;
+  border:none;
 }
-
-.bar{
-  height:100%;
-  width:0%;
-  background:#22c55e;
+.question{
+  margin-top:15px;
+  background:#1f2937;
+  padding:10px;
+  border-radius:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="start" class="card">
-  <h2>📌 ข้อสอบ</h2>
-  <input id="name" placeholder="ชื่อผู้สอบ">
-  <br><br>
+<div class="container" id="jobPage">
+  <h2>เลือกอาชีพ</h2>
+  <select id="job">
+    <option>ตำรวจ</option>
+    <option>หมอ</option>
+    <option>พยาบาล</option>
+    <option>ทหาร</option>
+    <option>นักการเมือง</option>
+    <option>นักดับเพลิง</option>
+  </select>
+  <button onclick="goForm()">สมัคร</button>
+</div>
+
+<div class="container" id="formPage" style="display:none;">
+  <h2>กรอกข้อมูล</h2>
+  <input id="name" placeholder="ชื่อเล่น">
+  <input id="age" type="number" placeholder="อายุ">
+  <input id="roblox" placeholder="ชื่อ Roblox">
+  <textarea id="reason" placeholder="เหตุผล"></textarea>
   <button onclick="startExam()">เริ่มสอบ</button>
 </div>
 
-<div id="exam" class="card hidden">
-  <div class="progress"><div id="bar" class="bar"></div></div>
-  <h3 id="question"></h3>
-  <div id="answers"></div>
+<div class="container" id="examPage" style="display:none;">
+  <h2>ข้อสอบ</h2>
+  <div id="questions"></div>
+  <button onclick="submitExam()">ส่งข้อสอบ</button>
 </div>
 
-<div id="result" class="card hidden"></div>
+<form id="dcForm" method="POST" target="_blank"></form>
 
 <script>
 
-const webhook = "https://discord.com/api/webhooks/1487387131482734732/-SyJfzBweYDymwSWjFjrH2fYw1xRlFV0eQ0csMzmStLxhrJN20wmR6S709uaN-jRTnBq";
-const userID = "1396455224390057984";
+// 🔥 คำถามอาชีพละ 10 ข้อ
+const questionBank = {
 
-let questions = [
-  {q:"หน้าที่ทหารคือ?", a:["ปกป้องชาติ","เล่น","นอน","เที่ยว"], c:0},
-  {q:"วินัยคือ?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
-  {q:"คำสั่ง?", a:["ต้องทำ","ไม่ต้อง","งง","เฉยๆ"], c:0},
-  {q:"ความสามัคคี?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
-  {q:"การฝึก?", a:["ช่วยพัฒนา","แย่","งง","เฉยๆ"], c:0},
-  {q:"ความอดทน?", a:["จำเป็น","ไม่จำเป็น","งง","เฉยๆ"], c:0},
-  {q:"ความรับผิดชอบ?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0},
-  {q:"ทหารดี?", a:["มีวินัย","ไม่มี","งง","เฉยๆ"], c:0},
-  {q:"ความกล้า?", a:["จำเป็น","ไม่จำเป็น","งง","เฉยๆ"], c:0},
-  {q:"คำสั่งผู้บังคับ?", a:["ต้องทำ","ไม่ต้อง","งง","เฉยๆ"], c:0},
-  {q:"เป้าหมาย?", a:["ปกป้องชาติ","เล่น","เที่ยว","นอน"], c:0},
-  {q:"หน้าที่หลัก?", a:["รับผิดชอบ","ปล่อย","ไม่ทำ","งง"], c:0},
-  {q:"การฝึกหนัก?", a:["ช่วยได้","แย่","งง","เฉยๆ"], c:0},
-  {q:"ระเบียบ?", a:["ต้องมี","ไม่จำเป็น","งง","เฉยๆ"], c:0},
-  {q:"ความมีวินัย?", a:["สำคัญ","ไม่สำคัญ","งง","เฉยๆ"], c:0}
-];
+"ตำรวจ":[
+{q:"เห็นคนทะเลาะควรทำยังไง?",a:"เข้าระงับเหตุ",c:["หนี","ถ่ายคลิป","เข้าระงับเหตุ","หัวเราะ"]},
+{q:"หน้าที่หลักคือ?",a:"รักษาความสงบ",c:["เล่น","รักษาความสงบ","นอน","ขายของ"]},
+{q:"เจอผู้ร้ายควร?",a:"จับกุม",c:["หนี","จับกุม","ช่วย","ถ่าย"]},
+{q:"ต้องมีอะไร?",a:"ความยุติธรรม",c:["โกง","ความยุติธรรม","ขี้เกียจ","เล่น"]},
+{q:"เวลาฉุกเฉิน?",a:"รีบช่วย",c:["หนี","รีบช่วย","ถ่าย","ยืนดู"]},
+{q:"ใส่ชุดเพื่อ?",a:"แสดงหน้าที่",c:["เท่","แสดงหน้าที่","เล่น","โชว์"]},
+{q:"ใช้กฎหมายเพื่อ?",a:"ควบคุมสังคม",c:["โกง","ควบคุมสังคม","เล่น","หนี"]},
+{q:"ต้องฝึกอะไร?",a:"วินัย",c:["เล่น","วินัย","โกง","นอน"]},
+{q:"เจออุบัติเหตุ?",a:"ช่วยเหลือ",c:["หนี","ช่วยเหลือ","ถ่าย","หัวเราะ"]},
+{q:"ประชาชนคือ?",a:"ต้องดูแล",c:["ไม่สน","ต้องดูแล","เล่น","โกง"]}
+],
 
-let current = 0;
-let name = "";
+"หมอ":[
+{q:"คนไข้หมดสติ?",a:"ช่วยทันที",c:["หนี","ช่วยทันที","ถ่าย","ยืนดู"]},
+{q:"หน้าที่?",a:"รักษาคนไข้",c:["เล่น","รักษาคนไข้","นอน","เที่ยว"]},
+{q:"ต้องมี?",a:"ความรู้",c:["โกง","ความรู้","เล่น","หนี"]},
+{q:"อุปกรณ์แพทย์?",a:"ใช้รักษา",c:["เล่น","ใช้รักษา","ขาย","โชว์"]},
+{q:"คนเจ็บ?",a:"ช่วยรักษา",c:["หนี","ช่วยรักษา","ถ่าย","หัวเราะ"]},
+{q:"จรรยาบรรณ?",a:"ซื่อสัตย์",c:["โกง","ซื่อสัตย์","หนี","เล่น"]},
+{q:"ทำงานที่ไหน?",a:"โรงพยาบาล",c:["ตลาด","โรงพยาบาล","บ้าน","ร้านเกม"]},
+{q:"เวลาฉุกเฉิน?",a:"รีบรักษา",c:["หนี","รีบรักษา","เล่น","ถ่าย"]},
+{q:"ตรวจโรคเพื่อ?",a:"วินิจฉัย",c:["มั่ว","วินิจฉัย","เล่น","โกง"]},
+{q:"คนไข้สำคัญไหม?",a:"สำคัญ",c:["ไม่","สำคัญ","เฉยๆ","ไม่รู้"]}
+],
+
+"พยาบาล":[
+{q:"หน้าที่?",a:"ดูแลคนไข้",c:["เล่น","ดูแลคนไข้","นอน","หนี"]},
+{q:"ต้องมี?",a:"ใจบริการ",c:["ขี้เกียจ","ใจบริการ","โกง","เล่น"]},
+{q:"ช่วยหมอทำ?",a:"รักษา",c:["เล่น","รักษา","หนี","ถ่าย"]},
+{q:"คนไข้เจ็บ?",a:"ช่วยเหลือ",c:["ไม่สน","ช่วยเหลือ","ถ่าย","หัวเราะ"]},
+{q:"ทำงานที่ไหน?",a:"โรงพยาบาล",c:["บ้าน","โรงพยาบาล","ตลาด","เกม"]},
+{q:"จรรยาบรรณ?",a:"ดี",c:["โกง","ดี","หนี","เล่น"]},
+{q:"ต้องอดทนไหม?",a:"ต้อง",c:["ไม่","ต้อง","เฉยๆ","ไม่รู้"]},
+{q:"ช่วยฉุกเฉิน?",a:"ช่วยทันที",c:["หนี","ช่วยทันที","ถ่าย","ยืนดู"]},
+{q:"ดูแลอะไร?",a:"คนไข้",c:["ของ","คนไข้","เงิน","รถ"]},
+{q:"ทำงานร่วมใคร?",a:"หมอ",c:["โจร","หมอ","เกม","คนอื่น"]}
+],
+
+"ทหาร":[
+{q:"หน้าที่?",a:"ป้องกันประเทศ",c:["เที่ยว","ป้องกันประเทศ","นอน","เล่น"]},
+{q:"ต้องมี?",a:"วินัย",c:["ขี้เกียจ","วินัย","โกง","เล่น"]},
+{q:"คำสั่ง?",a:"ต้องทำตาม",c:["ไม่ทำ","ต้องทำตาม","หนี","เล่น"]},
+{q:"ฝึกอะไร?",a:"ร่างกาย",c:["เล่น","ร่างกาย","โกง","นอน"]},
+{q:"ปกป้องใคร?",a:"ประเทศ",c:["ตัวเอง","ประเทศ","เกม","เงิน"]},
+{q:"อาวุธใช้เพื่อ?",a:"ป้องกัน",c:["เล่น","ป้องกัน","โชว์","ขาย"]},
+{q:"ต้องกล้าไหม?",a:"ต้อง",c:["ไม่","ต้อง","เฉยๆ","ไม่รู้"]},
+{q:"อยู่ที่ไหน?",a:"ค่าย",c:["บ้าน","ค่าย","ตลาด","เกม"]},
+{q:"เวลาสงคราม?",a:"สู้",c:["หนี","สู้","ยืนดู","ถ่าย"]},
+{q:"หน้าที่หลัก?",a:"รักษาความมั่นคง",c:["เล่น","รักษาความมั่นคง","โกง","หนี"]}
+],
+
+"นักการเมือง":[
+{q:"หน้าที่?",a:"ดูแลประชาชน",c:["ไม่ทำ","ดูแลประชาชน","โกง","เที่ยว"]},
+{q:"ควรทำ?",a:"พัฒนาประเทศ",c:["โกง","พัฒนาประเทศ","หนี","เล่น"]},
+{q:"ต้องมี?",a:"ซื่อสัตย์",c:["โกง","ซื่อสัตย์","หนี","เล่น"]},
+{q:"ทำงานที่ไหน?",a:"รัฐบาล",c:["บ้าน","รัฐบาล","ตลาด","เกม"]},
+{q:"ประชาชนคือ?",a:"สำคัญ",c:["ไม่","สำคัญ","เฉยๆ","ไม่รู้"]},
+{q:"ออกกฎหมายเพื่อ?",a:"สังคม",c:["โกง","สังคม","เล่น","หนี"]},
+{q:"ต้องรับฟัง?",a:"ประชาชน",c:["ไม่","ประชาชน","เงิน","เกม"]},
+{q:"โกงได้ไหม?",a:"ไม่ได้",c:["ได้","ไม่ได้","เฉยๆ","ไม่รู้"]},
+{q:"ทำงานร่วม?",a:"ทีม",c:["คนเดียว","ทีม","เกม","เงิน"]},
+{q:"เป้าหมาย?",a:"พัฒนา",c:["โกง","พัฒนา","หนี","เล่น"]}
+],
+
+"นักดับเพลิง":[
+{q:"ไฟไหม้?",a:"ดับไฟ",c:["หนี","ดับไฟ","ถ่าย","ยืนดู"]},
+{q:"หน้าที่?",a:"ช่วยไฟไหม้",c:["นอน","ช่วยไฟไหม้","เล่น","หนี"]},
+{q:"ช่วยคน?",a:"ช่วย",c:["ไม่","ช่วย","ถ่าย","หัวเราะ"]},
+{q:"ต้องกล้า?",a:"ต้อง",c:["ไม่","ต้อง","เฉยๆ","ไม่รู้"]},
+{q:"ใช้อะไร?",a:"น้ำ",c:["ไฟ","น้ำ","ลม","ดิน"]},
+{q:"ทำงานที่ไหน?",a:"สถานีดับเพลิง",c:["บ้าน","สถานีดับเพลิง","ตลาด","เกม"]},
+{q:"อุปกรณ์?",a:"ช่วยดับไฟ",c:["เล่น","ช่วยดับไฟ","ขาย","โชว์"]},
+{q:"ช่วยฉุกเฉิน?",a:"ช่วยทันที",c:["หนี","ช่วยทันที","ถ่าย","ยืนดู"]},
+{q:"ปกป้องใคร?",a:"ประชาชน",c:["ตัวเอง","ประชาชน","เงิน","เกม"]},
+{q:"หน้าที่หลัก?",a:"ดับไฟ",c:["เล่น","ดับไฟ","โกง","หนี"]}
+]
+
+};
+
+let answers=[];
+
+function goForm(){
+  jobPage.style.display="none";
+  formPage.style.display="block";
+}
 
 function startExam(){
-
-  name = document.getElementById("name").value.trim();
-
-  if(name === ""){
-    alert("กรุณากรอกชื่อ");
-    return;
-  }
-
-  document.getElementById("start").classList.add("hidden");
-  document.getElementById("exam").classList.remove("hidden");
-
-  showQuestion();
+  formPage.style.display="none";
+  examPage.style.display="block";
+  generateQuestions();
 }
 
-function showQuestion(){
+// 🔥 ไม่ซ้ำ + สุ่มตัวเลือก
+function generateQuestions(){
+  let jobVal=document.getElementById("job").value;
+  let bank=[...questionBank[jobVal]];
+  let container=document.getElementById("questions");
 
-  let q = questions[current];
+  container.innerHTML="";
+  answers=[];
 
-  document.getElementById("question").innerText = q.q;
+  bank.sort(()=>Math.random()-0.5);
 
-  let html = "";
+  let selected=bank.slice(0,10);
 
-  q.a.forEach((ans,i)=>{
-    html += `<button onclick="answer(${i})">${ans}</button><br>`;
+  selected.forEach((item,i)=>{
+    let choices=[...item.c].sort(()=>Math.random()-0.5);
+
+    let div=document.createElement("div");
+    div.className="question";
+
+    let html=`<p>ข้อ ${i+1}: ${item.q}</p>`;
+    choices.forEach(c=>{
+      html+=`<label><input type="radio" name="q${i+1}" value="${c}"> ${c}</label>`;
+    });
+
+    div.innerHTML=html;
+    container.appendChild(div);
+
+    answers.push(item.a);
+  });
+}
+
+function submitExam(){
+  let score=0;
+
+  answers.forEach((ans,i)=>{
+    let radios=document.getElementsByName("q"+(i+1));
+    let selected;
+    radios.forEach(r=>{if(r.checked) selected=r.value;});
+    if(selected===ans) score++;
   });
 
-  document.getElementById("answers").innerHTML = html;
-
-  let percent = (current / questions.length) * 100;
-  document.getElementById("bar").style.width = percent + "%";
+  send(score);
 }
 
-function answer(i){
+function send(score){
+  let webhook="https://discord.com/api/webhooks/1487387131482734732/-SyJfzBweYDymwSWjFjrH2fYw1xRlFV0eQ0csMzmStLxhrJN20wmR6S709uaN-jRTnBq";
+  let adminID="1396455224390057984";
 
-  current++;
+  let data={
+    content:`<@${adminID}> 📢 มีคนสมัคร`,
+    embeds:[{
+      title:"ใบสมัคร",
+      fields:[
+        {name:"ชื่อ",value:document.getElementById("name").value||"-"},
+        {name:"อายุ",value:document.getElementById("age").value||"-"},
+        {name:"Roblox",value:document.getElementById("roblox").value||"-"},
+        {name:"อาชีพ",value:document.getElementById("job").value},
+        {name:"เหตุผล",value:document.getElementById("reason").value||"-"},
+        {name:"คะแนน",value:score+"/10"}
+      ]
+    }]
+  };
 
-  if(current < questions.length){
-    showQuestion();
-  }else{
-    finish();
-  }
-}
+  let form=document.getElementById("dcForm");
+  form.action=webhook;
 
-function finish(){
+  let input=document.createElement("input");
+  input.type="hidden";
+  input.name="payload_json";
+  input.value=JSON.stringify(data);
 
-  document.getElementById("exam").classList.add("hidden");
-  document.getElementById("result").classList.remove("hidden");
+  form.innerHTML="";
+  form.appendChild(input);
+  form.submit();
 
-  document.getElementById("result").innerHTML = `
-    <h2>📌 ทำข้อสอบเสร็จแล้ว</h2>
-  `;
-
-  fetch(webhook,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      content:`<@${userID}>\n📢 ผู้สอบ: ${name}\n📌 ทำข้อสอบเสร็จแล้ว`
-    })
-  }).catch(()=>{});
-
+  alert("ส่งเรียบร้อย");
 }
 
 </script>
